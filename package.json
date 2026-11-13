@@ -4,13 +4,16 @@
   "description": "",
   "main": "script.js",
   "scripts": {
-    "build:firework": "esbuild firework.js --bundle --format=iife --outfile=firework.bundle.js"
+    "build:firework": "esbuild firework.js --bundle --format=iife --outfile=firework.bundle.js",
+    "build:analytics": "esbuild analytics.js --bundle --format=iife --outfile=analytics.bundle.js",
+    "build": "npm run build:firework && npm run build:analytics"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@tsparticles/confetti": "^4.5.4"
+    "@tsparticles/confetti": "^4.5.4",
+    "@vercel/analytics": "^2.0.1"
   },
   "devDependencies": {
     "esbuild": "^0.28.2"
