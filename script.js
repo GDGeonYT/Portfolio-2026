@@ -42,6 +42,56 @@ const setupImageModal = (trigger, dialog, closeButton) => {
     });
 };
 
+const portraitFrame = document.querySelector(".portrait-frame");
+const portraitImages = portraitFrame?.querySelectorAll(".portrait");
+if (portraitFrame && portraitImages?.length === 2) {
+    let activePortrait = portraitFrame.querySelector(".portrait--current");
+    const enchantSounds = [
+        new Audio("assets/sounds/enchant1.ogg"),
+        new Audio("assets/sounds/enchant2.ogg"),
+        new Audio("assets/sounds/enchant3.ogg")
+    ];
+    enchantSounds.forEach(sound => {
+        sound.preload = "auto";
+        sound.volume = 0.6;
+    });
+
+    let enchantTimeout;
+    portraitFrame.addEventListener("click", () => {
+        const isPhoto = portraitFrame.dataset.portrait === "photo";
+        portraitFrame.dataset.portrait = isPhoto ? "avatar" : "photo";
+        const nextImage = isPhoto ? "assets/GDGeon_2025.png" : "assets/pfp.jpg";
+        const nextAlt = isPhoto
+            ? "Minecraft-style avatar of Geon Ivan Dulaca"
+            : "Portrait photo of Geon Ivan Dulaca";
+        const nextPortrait = activePortrait === portraitImages[0]
+            ? portraitImages[1]
+            : portraitImages[0];
+
+        portraitFrame.classList.remove("is-enchanting");
+        void portraitFrame.offsetWidth;
+        nextPortrait.src = nextImage;
+        nextPortrait.alt = nextAlt;
+        portraitFrame.classList.add("is-enchanting", "is-crossfading");
+        window.clearTimeout(enchantTimeout);
+        enchantTimeout = window.setTimeout(() => {
+            activePortrait.classList.remove("portrait--current");
+            activePortrait.classList.add("portrait--next");
+            nextPortrait.classList.remove("portrait--next");
+            nextPortrait.classList.add("portrait--current");
+            activePortrait = nextPortrait;
+            portraitFrame.classList.remove("is-enchanting", "is-crossfading");
+        }, 650);
+
+        const sound = enchantSounds[Math.floor(Math.random() * enchantSounds.length)];
+        sound.currentTime = 0;
+        const playback = sound.play();
+        if (playback && typeof playback.catch === "function") {
+            playback.catch(error => console.error("Unable to play the portrait enchant sound.", error));
+        }
+    });
+}
+
 const certificateDialog = document.getElementById("certificate-dialog");
 setupImageModal(
     document.getElementById("open-certificate"),
@@ -153,6 +203,51 @@ if (heroTitle) {
 }
 
 const siteHeader = document.querySelector(".site-header");
+const navMenuToggle = document.querySelector(".nav-menu-toggle");
+const navLinks = document.querySelector(".nav-links");
+const closeMobileNav = () => {
+    if (!navMenuToggle || !navLinks) {
+        return;
+    }
+
+    navMenuToggle.setAttribute("aria-expanded", "false");
+    navLinks.classList.remove("is-open");
+};
+
+if (navMenuToggle && navLinks) {
+    navMenuToggle.addEventListener("click", () => {
+        const isOpen = navMenuToggle.getAttribute("aria-expanded") === "true";
+        navMenuToggle.setAttribute("aria-expanded", String(!isOpen));
+        navLinks.classList.toggle("is-open", !isOpen);
+    });
+
+    navLinks.addEventListener("click", event => {
+        if (event.target instanceof Element && event.target.closest("a")) {
+            closeMobileNav();
+        }
+    });
+
+    document.addEventListener("click", event => {
+        if (event.target instanceof Node
+            && !navMenuToggle.contains(event.target)
+            && !navLinks.contains(event.target)) {
+            closeMobileNav();
+        }
+    });
+
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+            closeMobileNav();
+        }
+    });
+
+    window.addEventListener("resize", () => {
+        if (window.innerWidth > 650) {
+            closeMobileNav();
+        }
+    });
+}
+
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 let lenisInstance = null;
 if (!prefersReducedMotion) {
@@ -383,7 +478,8 @@ document.addEventListener("click", event => {
         )
         : null;
 
-    if (!interactiveElement || interactiveElement.matches(":disabled")
+    if (!interactiveElement || interactiveElement.matches(".portrait-frame")
+        || interactiveElement.matches(":disabled")
         || interactiveElement.getAttribute("aria-disabled") === "true"
         || (interactiveElement.matches("dialog[open]") && event.target !== interactiveElement)) {
         return;
