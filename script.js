@@ -174,7 +174,9 @@ if (!prefersReducedMotion) {
 
             const scrollMarginTop = Number.parseFloat(window.getComputedStyle(target).scrollMarginTop) || 0;
             const headerOffset = siteHeader.getBoundingClientRect().height + 16;
-            lenisInstance.scrollTo(target, { offset: -Math.max(scrollMarginTop, headerOffset) });
+            const targetPosition = target.getBoundingClientRect().top + window.scrollY
+                - Math.max(scrollMarginTop, headerOffset);
+            lenisInstance.scrollTo(Math.max(0, targetPosition));
         };
 
         document.addEventListener("click", event => {
@@ -219,6 +221,28 @@ if (!prefersReducedMotion) {
     }
 }
 
+const heroSection = document.querySelector(".hero-section");
+let heroParallaxFrame = null;
+const updateHeroParallax = () => {
+    if (!heroSection || prefersReducedMotion) {
+        return;
+    }
+
+    if (heroParallaxFrame !== null) {
+        return;
+    }
+
+    heroParallaxFrame = window.requestAnimationFrame(() => {
+        heroSection.style.setProperty("--hero-parallax-scroll", `${window.scrollY}px`);
+        heroParallaxFrame = null;
+    });
+};
+
+if (!prefersReducedMotion) {
+    window.addEventListener("scroll", updateHeroParallax, { passive: true });
+    updateHeroParallax();
+}
+
 const navSectionLinks = Array.from(document.querySelectorAll('.nav-links a[href^="#"]'))
     .map(link => ({
         link,
@@ -240,6 +264,7 @@ if (navSectionLinks.length > 0) {
     };
 
     const updateCurrentNavLink = () => {
+        siteHeader.classList.toggle("is-scrolled", window.scrollY > 8);
         const activationPoint = siteHeader.getBoundingClientRect().bottom + 64;
         if (pendingNavSection) {
             setCurrentNavSection(pendingNavSection.section);
@@ -303,8 +328,27 @@ if (navSectionLinks.length > 0) {
 }
 
 const scrollRevealElements = document.querySelectorAll(".scroll-reveal");
+document.querySelectorAll(".project-pixel-grid").forEach(grid => {
+    for (let index = 0; index < 40; index += 1) {
+        const pixel = document.createElement("span");
+        const row = Math.floor(index / 8);
+        const column = index % 8;
+        pixel.style.setProperty("--pixel-delay", `${(column * 28) + (row * 20)}ms`);
+        grid.append(pixel);
+    }
+});
+
+const revealProjectCard = element => {
+    if (element.classList.contains("project-card")) {
+        element.classList.add("is-pixel-revealed");
+    }
+};
+
 if (prefersReducedMotion || !("IntersectionObserver" in window)) {
-    scrollRevealElements.forEach(element => element.classList.add("is-visible"));
+    scrollRevealElements.forEach(element => {
+        element.classList.add("is-visible");
+        revealProjectCard(element);
+    });
 } else {
     const revealObserver = new IntersectionObserver(entries => {
         entries.forEach(entry => {
@@ -313,6 +357,7 @@ if (prefersReducedMotion || !("IntersectionObserver" in window)) {
             }
 
             entry.target.classList.add("is-visible");
+            revealProjectCard(entry.target);
             revealObserver.unobserve(entry.target);
         });
     }, {

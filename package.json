@@ -1,0 +1,18 @@
+{
+  "name": "portfolio",
+  "version": "1.0.0",
+  "description": "",
+  "main": "script.js",
+  "scripts": {
+    "build:firework": "esbuild firework.js --bundle --format=iife --outfile=firework.bundle.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tsparticles/confetti": "^4.5.4"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}
